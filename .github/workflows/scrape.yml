@@ -1,85 +1,31 @@
-import pandas as pd
-import requests
-import time
-import os
+name: Liga F Data Bot
 
-# CONFIGURACIÓN LIGA F MOEVE (FBRef ID: 230)
-URL_PLAYERS = "https://fbref.com/en/comps/230/stats/Liga-F-Stats"
-URL_LEAGUE = "https://fbref.com/en/comps/230/Liga-F-Stats"
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
 
-def scrape_data():
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    
-    print("🚀 INICIANDO ROBOT DE DATOS: LIGA F MOEVE...")
-    
-    try:
-        # 1. SCRAPING JUGADORAS (ESTADÍSTICAS ESTÁNDAR)
-        print("🔍 Extrayendo estadísticas de jugadoras...")
-        response = requests.get(URL_PLAYERS, headers=headers)
-        # Usamos lxml o html5lib para mayor compatibilidad
-        df_list = pd.read_html(response.text)
-        
-        # En FBRef, la tabla de estadísticas suele ser la índice 2
-        df_players = df_list[2] 
-        
-        # LIMPIEZA DE CABECERAS MULTI-NIVEL
-        df_players.columns = df_players.columns.get_level_values(-1)
-        
-        # Eliminar filas que repiten los nombres de las columnas
-        df_players = df_players[df_players['Player'] != 'Player']
-        
-        # Renombrar para que la App las reconozca fácilmente
-        df_players = df_players.rename(columns={
-            'Player': 'Jugadora',
-            'Squad': 'Escuadra',
-            'MP': 'PJ',
-            'Starts': 'Titular',
-            'Min': 'Minutos',
-            'Gls': 'Gls.',
-            'Ast': 'Ast',
-            'G-PK': 'Goles_sin_P',
-            'xG': 'xG',
-            'npxG': 'npxG',
-            'PrgC': 'PrgC',
-            'PrgP': 'PrgP'
-        })
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-        # 2. SCRAPING CLASIFICACIÓN DE LA LIGA
-        print("📊 Extrayendo tabla de clasificación...")
-        response_l = requests.get(URL_LEAGUE, headers=headers)
-        df_l_list = pd.read_html(response_l.text)
-        
-        # La tabla de clasificación suele ser la índice 0
-        df_league = df_l_list[0]
-        
-        # Limpieza básica de la tabla de liga
-        df_league = df_league.rename(columns={
-            'Squad': 'Equipo', 
-            'MP': 'PJ', 
-            'W': 'V', 
-            'D': 'E', 
-            'L': 'D', 
-            'GF': 'GF',
-            'GA': 'GC',
-            'GD': 'DG',
-            'Pts': 'Puntos',
-            'xG': 'xG',
-            'xGA': 'xGA'
-        })
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
 
-        # 3. GUARDAR RESULTADOS
-        # Estos archivos son los que la App de Hugging Face leerá
-        df_players.to_csv("liga_f_players.csv", index=False)
-        df_league.to_csv("liga_f_league.csv", index=False)
-        
-        print(f"✅ ÉXITO: {len(df_players)} jugadoras y {len(df_league)} equipos procesados.")
-        return True
-        
-    except Exception as e:
-        print(f"❌ ERROR CRÍTICO EN EL ROBOT: {str(e)}")
-        return False
+      - name: Install dependencies
+        run: |
+          pip install pandas requests beautifulsoup4 lxml html5lib
 
-if __name__ == "__main__":
-    scrape_data()
+      - name: Run scraper
+        run: python scraper.py
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🤖 Actualización automática Liga F Moeve"
+          file_pattern: "*.csv"
