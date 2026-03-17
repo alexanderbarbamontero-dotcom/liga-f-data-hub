@@ -9,8 +9,8 @@ st.set_page_config(page_title="Liga F Elite Hub", page_icon="💎", layout="wide
 
 # URL de los datos generados por el Robot de GitHub
 # SUSTITUYE 'TU_USUARIO' por tu nombre de usuario de GitHub
-DATA_URL = "https://raw.githubusercontent.com/TU_USUARIO/liga-f-data-hub/main/liga_f_players.csv"
-LEAGUE_URL = "https://raw.githubusercontent.com/TU_USUARIO/liga-f-data-hub/main/liga_f_league.csv"
+DATA_URL = "https://raw.githubusercontent.com/alexanderbarbamontero-dotcom/liga-f-data-hub/main/liga_f_players.csv"
+LEAGUE_URL = "https://raw.githubusercontent.com/alexanderbarbamontero-dotcom/liga-f-data-hub/main/liga_f_league.csv"
 
 @st.cache_data(ttl=3600)
 def load_hub_data():
