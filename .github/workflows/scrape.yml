@@ -15,8 +15,10 @@ jobs:
           python-version: '3.9'
       - run: pip install pandas requests beautifulsoup4 lxml
       - run: python scraper.py
-      - run: |
-          git config --global user.name "Data Bot"
-          git config --global user.email "bot@github.com"
+      - name: Commit and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add liga_f_players.csv liga_f_league.csv
-          git diff --staged --quiet || (git commit -m "📊 Update Liga F data" && git push)
+          git commit -m "📊 Update Liga F data" || exit 0
+          git push
